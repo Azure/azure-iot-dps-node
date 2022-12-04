@@ -1,0 +1,30 @@
+name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+- job: Phase_2
+  displayName: Ubuntu 20.04 - Node 14.x
+  condition: succeededOrFailed()
+  pool:
+    vmImage: 'Ubuntu 20.04'
+
+  steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 14.x'
+    inputs:
+      versionSpec: '14.x'
+
+
+  - script: |
+    npm run build
+    npm run ci
+    displayName: 'Unit & Integration Tests'
+    env:
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+
+  - script: |
+    cd e2e
+    npm install
+    ln -s

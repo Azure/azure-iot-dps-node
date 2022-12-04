@@ -1,0 +1,63 @@
+{
+  "name": "azure-iot-provisioning-device-e2e",
+  "version": "1.9.1",
+  "description": "E2E tests for the Azure Device Provisioning SDK",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^3.2.3",
+    "azure-iot-common": "1.13.1",
+    "azure-iot-provisioning-device": "1.9.1",
+    "azure-iot-provisioning-device-amqp": "1.9.1",
+    "azure-iot-provisioning-device-http": "1.9.1",
+    "azure-iot-provisioning-device-mqtt": "1.8.1",
+    "azure-iot-provisioning-service": "1.10.1",
+    "azure-iot-security-symmetric-key": "1.8.1",
+    "azure-iot-security-tpm": "1.9.1",
+    "azure-iot-security-x509": "1.8.1",
+    "azure-iothub": "^1.16.1",
+    "debug": "^4.3.1",
+    "pem": "^1.14.2",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.5",
+    "@types/node": "^16.10.2",
+    "eslint": "^8.26.0",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "eslint-plugin-jsdoc": "^39.3.25",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-no-only-tests": "^3.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^1.5.0",
+    "mocha": "^9.2.1",
+    "mocha-junit-reporter": "^2.0.2",
+    "mocha-multi-reporters": "^1.1.7",
+    "chai": "^4.3.3",
+    "nyc": "^15.0.0",
+    "sinon": "^11.1.2",
+    "source-map-support": "^0.5.16",
+    "typescript": "4.4.4"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .js -f visualstudio",
+    "server_validation": "mocha --reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _server_validation.js",
+    "service_create_delete": "--reporter mocha-multi-reporters --reporter-options configFile=../../mocha-reports.json _service_create_delete.js",
+    "provisioning_e2e": "mocha  _provisioning_e2e.js",
+    "alltest": "mocha -- _*.js",
+    "e2e": "npm -s run lint && npm -s run alltest"
+  },
+  "engines": {
+    "node": ">= 14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azure/azure-iot-sdk-node.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-iot-sdk-node/issues"
+  },
+  "homepage": "https://github.com/Azure/azure-iot-sdk-node#readme"
+}
