@@ -1,0 +1,10 @@
+{
+  "lerna": "^5.3.0",
+  "packages": [
+    ".",
+    "samples",
+    "e2e"
+  ],
+  "version": "0.0.0",
+  "maxBuffer": 1048576
+}

@@ -1,0 +1,69 @@
+name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+- job: Phase_1
+  displayName: 'Windows Node 14.x'
+  condition: succeededOrFailed()
+  pool:
+    vmImage: 'windows-2019'
+  steps:
+  - task: NodeTool@0
+    displayName: 'Use Node 14.x'
+    inputs:
+      versionSpec: '14.x'
+
+
+  - script: 'call lerna run ci'
+    displayName: 'Unit & Integration Tests'
+    env:
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results | Mocha'
+    inputs:
+      testResultsFiles: 'e2etests/test-results.*.xml'
+      mergeTestResults: true
+      testRunTitle: 'E2E Tests - Windows'
+    condition: succeededOrFailed()
+
+  - task: DownloadBuildArtifacts@0
+    condition: coalesce(variables.release, False)
+    inputs:
+      buildType: 'specific'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: '296' # iot-sdks-internals-scripts pipeline
+      buildVersionToDownload: 'latest'
+      downloadType: 'single'
+      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      artifactName: 'node'
+
+  - powershell: |
+      . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
+      $outputFolder = $env:output
+      Build-Artifacts -Sources $env:sources -Output $outputFolder
+    displayName: 'npm pack'
+    condition: coalesce(variables.release, False)
+    env:
+      sources: $(Build.SourcesDirectory)
+      output: $(Build.ArtifactStagingDirectory)\_out
+
+  - task: PublishBuildArtifacts@1
+    condition: coalesce(variables.release, False)
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
+      ArtifactName: drop
+      publishLocation: 'Container'
+
+  - task: AzureFileCopy@2
+    displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+    condition: coalesce(variables.release, False)
+    inputs:
+      SourcePath: $(Build.ArtifactStagingDirectory)\_out
+      azureSubscription: azuresdkpartnerdrops
+      Destination: AzureBlob
+      storage: azuresdkpartnerdrops
+      ContainerName: 'drops/azure-iot-sdk/node/'
