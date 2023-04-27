@@ -42,7 +42,7 @@ jobs:
     inputs:
       versionSpec: '14.x'
 
-
+  # Unit tests
   - script: |
       npm install
       npm run build
@@ -51,6 +51,7 @@ jobs:
     env:
       IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
 
+  # Int tests
   - script: |
       cd e2e
       npm install
@@ -68,7 +69,7 @@ jobs:
       IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
       IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
 
-
+  # Publish test results
   - task: PublishTestResults@2
     displayName: 'Publish Test Results | Mocha'
     inputs:
@@ -77,43 +78,36 @@ jobs:
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
 
-  # - task: DownloadBuildArtifacts@0
-  #   condition: ${{ parameters.release }}
-  #   inputs:
-  #     buildType: 'specific'
-  #     project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
-  #     pipeline: '296' # iot-sdks-internals-scripts pipeline
-  #     buildVersionToDownload: 'latest'
-  #     downloadType: 'single'
-  #     downloadPath: '$(System.ArtifactsDirectory)/scripts'
-  #     artifactName: 'node'
-
-  # - powershell: |
-  #     . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
-  #     $outputFolder = $env:output
-  #     Build-Artifacts -Sources $env:sources -Output $outputFolder
-  #   displayName: 'npm pack'
-  #   condition: ${{ parameters.release }}
-  #   env:
-  #     sources: $(Build.SourcesDirectory)
-  #     output: $(Build.ArtifactStagingDirectory)\_out
-
-  - powershell: |
-      $archiveName = npm.cmd pack
-
-      if ($LASTEXITCODE -ne 0) {
-        throw "Last exit code is ($LASTEXITCODE)"
-      }
-
-      mkdir _out
-      cp $archiveName .\out\
-
-  - task: PublishBuildArtifacts@1
-    # condition: ${{ parameters.release }}
+  # Pack npm archive
+  - task: PowerShell@2
+    displayName: 'Create NPM pack archive'
     inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
-      ArtifactName: drop
-      publishLocation: 'Container'
+      targetType: inline
+      script: |
+        $package = npm pack
+        echo "##vso[task.setvariable variable=package]$package"
+      workingDirectory: $(Build.SourcesDirectory)
+
+  # copy packed npm archive to artifact staging / dist
+  - task: CopyFiles@2
+    displayName: 'Copy packed archive to artifact staging'
+    inputs:
+      contents: $(package)
+      targetFolder: $(Build.ArtifactStagingDirectory)
+      sourceFolder: $(Build.SourcesDirectory)
+
+  # run SBOM in artifact staging
+  - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+    displayName: 'Generate software manifest for executable'
+    inputs:
+      BuildDropPath: $(Build.ArtifactStagingDirectory)
+
+  # publish artifacts to pipeline
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifacts'
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: azure-iot-dps-node
 
   # - task: AzureFileCopy@2
   #   displayName: 'Copy Release Artifacts to Partner Release Pipeline'

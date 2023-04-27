@@ -47,6 +47,11 @@
     "test": "npm -s run lint && npm -s run build && npm -s run alltest",
     "e2e": "./node_modules/mocha/bin/_mocha e2e/_*.js"
   },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "iotprovisioningservice.d.ts"
+  ],
   "nyc": {
     "exclude": [
       "coverage/**",
