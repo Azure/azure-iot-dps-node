@@ -3,12 +3,39 @@ resources:
   - repo: self
     clean: true
 
+# Manual trigger only
+trigger: none
+pr: none
+
+parameters:
+- name: buildAgentPoolVar
+  displayName: 'Build agent pool'
+  type: string
+  default: 'BuildAgentPool'
+- name: buildAgentVmImageVar
+  displayName: 'Build agent image'
+  type: string
+  default: 'BuildAgentImage'
+- name: release
+  displayName: 'Release to SDK partner storage account'
+  type: boolean
+  default: false
+
+variables:
+- name: vmImage
+  value: $[variables.${{ parameters.buildAgentVmImageVar }}]
+- name: buildPool
+  value: $[variables.${{ parameters.buildAgentPoolVar }}]
+
 jobs:
 - job: Phase_1
   displayName: 'Windows Node 14.x'
   condition: succeededOrFailed()
   pool:
-    vmImage: 'windows-2019'
+    name: $(buildPool)
+    vmImage: $(vmImage)
+    demands:
+      - ImageOverride -equals $(vmImage)
   steps:
   - task: NodeTool@0
     displayName: 'Use Node 14.x'
@@ -30,29 +57,39 @@ jobs:
       testRunTitle: 'E2E Tests - Windows'
     condition: succeededOrFailed()
 
-  - task: DownloadBuildArtifacts@0
-    condition: coalesce(variables.release, False)
-    inputs:
-      buildType: 'specific'
-      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
-      pipeline: '296' # iot-sdks-internals-scripts pipeline
-      buildVersionToDownload: 'latest'
-      downloadType: 'single'
-      downloadPath: '$(System.ArtifactsDirectory)/scripts'
-      artifactName: 'node'
+  # - task: DownloadBuildArtifacts@0
+  #   condition: ${{ parameters.release }}
+  #   inputs:
+  #     buildType: 'specific'
+  #     project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+  #     pipeline: '296' # iot-sdks-internals-scripts pipeline
+  #     buildVersionToDownload: 'latest'
+  #     downloadType: 'single'
+  #     downloadPath: '$(System.ArtifactsDirectory)/scripts'
+  #     artifactName: 'node'
+
+  # - powershell: |
+  #     . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
+  #     $outputFolder = $env:output
+  #     Build-Artifacts -Sources $env:sources -Output $outputFolder
+  #   displayName: 'npm pack'
+  #   condition: ${{ parameters.release }}
+  #   env:
+  #     sources: $(Build.SourcesDirectory)
+  #     output: $(Build.ArtifactStagingDirectory)\_out
 
   - powershell: |
-      . $(System.ArtifactsDirectory)/scripts/node/release-node.ps1
-      $outputFolder = $env:output
-      Build-Artifacts -Sources $env:sources -Output $outputFolder
-    displayName: 'npm pack'
-    condition: coalesce(variables.release, False)
-    env:
-      sources: $(Build.SourcesDirectory)
-      output: $(Build.ArtifactStagingDirectory)\_out
+      $archiveName = npm.cmd pack
+
+      if ($LASTEXITCODE -ne 0) {
+        throw "Last exit code is ($LASTEXITCODE)"
+      }
+
+      mkdir _out
+      cp $archiveName .\out\
 
   - task: PublishBuildArtifacts@1
-    condition: coalesce(variables.release, False)
+    # condition: ${{ parameters.release }}
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)\_out
       ArtifactName: drop
@@ -60,7 +97,7 @@ jobs:
 
   - task: AzureFileCopy@2
     displayName: 'Copy Release Artifacts to Partner Release Pipeline'
-    condition: coalesce(variables.release, False)
+    condition: ${{ parameters.release }}
     inputs:
       SourcePath: $(Build.ArtifactStagingDirectory)\_out
       azureSubscription: azuresdkpartnerdrops

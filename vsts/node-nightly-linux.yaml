@@ -18,13 +18,22 @@ jobs:
 
 
   - script: |
-    npm run build
-    npm run ci
-    displayName: 'Unit & Integration Tests'
+      npm install
+      npm run build
+      npm run ci
+    displayName: 'Unit Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
 
   - script: |
-    cd e2e
-    npm install
-    ln -s
+      cd e2e
+      npm install
+      npm run e2e
+    displayName: 'E2E Tests'
+    env:
+      IOT_PROVISIONING_DEVICE_IDSCOPE: $(IOT-PROVISIONING-DEVICE-IDSCOPE)
+      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
+      IOT_PROVISIONING_ROOT_CERT: $(IOT-PROVISIONING-ROOT-CERT)
+      IOT_PROVISIONING_ROOT_CERT_KEY: $(IOT-PROVISIONING-ROOT-CERT-KEY)
