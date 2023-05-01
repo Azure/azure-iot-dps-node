@@ -27,87 +27,110 @@ variables:
 - name: buildPool
   value: $[variables.${{ parameters.buildAgentPoolVar }}]
 
-jobs:
-- job: Phase_1
-  displayName: 'Windows Node 14.x'
-  condition: succeededOrFailed()
-  pool:
-    name: $(buildPool)
-    vmImage: $(vmImage)
-    demands:
-      - ImageOverride -equals $(vmImage)
-  steps:
-  - task: NodeTool@0
-    displayName: 'Use Node 14.x'
-    inputs:
-      versionSpec: '14.x'
+stages:
+- stage: SDL
+  jobs:
+  - job: sdl_checks
+    displayName: 'SDL checks'
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - template: common/sdl_steps.yaml
 
-  # Unit tests
-  - script: |
-      npm install
-      npm run build
-      npm run ci
-    displayName: 'Unit Tests'
-    env:
-      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+- stage: Test
+  dependsOn: ['SDL']
+  jobs:
+  - job: run_tests
+    displayName: 'Tests - Windows Node 14.x'
+    pool:
+      name: $(buildPool)
+      vmImage: $(vmImage)
+      demands:
+        - ImageOverride -equals $(vmImage)
+    steps:
+    - task: NodeTool@0
+      displayName: 'Use Node 14.x'
+      inputs:
+        versionSpec: '14.x'
 
-  # Int tests
-  - script: |
-      cd e2e
-      npm install
-      npm run e2e
-    displayName: 'E2E Tests'
-    env:
-      IOT_PROVISIONING_DEVICE_IDSCOPE: $(IOT-PROVISIONING-DEVICE-IDSCOPE)
-      IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
-      IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
-      IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
-      IOT_PROVISIONING_ROOT_CERT: $(IOT-PROVISIONING-ROOT-CERT)
-      IOT_PROVISIONING_ROOT_CERT_KEY: $(IOT-PROVISIONING-ROOT-CERT-KEY)
-      DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
-      DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
-      IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
-      IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
+    # Unit tests
+    - script: |
+        npm install
+        npm run build
+        npm run ci
+      displayName: 'Unit Tests'
+      env:
+        IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
 
-  # Publish test results
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results | Mocha'
-    inputs:
-      testResultsFiles: 'e2etests/test-results.*.xml'
-      mergeTestResults: true
-      testRunTitle: 'E2E Tests - Windows'
-    condition: succeededOrFailed()
+    # Int tests
+    - script: |
+        cd e2e
+        npm install
+        npm run e2e
+      displayName: 'E2E Tests'
+      env:
+        IOT_PROVISIONING_DEVICE_IDSCOPE: $(IOT-PROVISIONING-DEVICE-IDSCOPE)
+        IOT_PROVISIONING_SERVICE_CONNECTION_STRING: $(IOT-PROVISIONING-SERVICE-CONNECTION-STRING)
+        IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
+        IOT_PROVISIONING_DEVICE_ENDPOINT: $(IOT-PROVISIONING-DEVICE-ENDPOINT)
+        IOT_PROVISIONING_ROOT_CERT: $(IOT-PROVISIONING-ROOT-CERT)
+        IOT_PROVISIONING_ROOT_CERT_KEY: $(IOT-PROVISIONING-ROOT-CERT-KEY)
+        DPS_GLOBAL_DEVICE_ENDPOINT_INVALID_CERT: $(DPS-GLOBAL-DEVICE-ENDPOINT-INVALID-CERT)
+        DPS_CONN_STRING_INVALID_CERT: $(DPS-CONN-STRING-INVALID-CERT)
+        IOTHUB_CA_ROOT_CERT: $(IOTHUB-CA-ROOT-CERT)
+        IOTHUB_CA_ROOT_CERT_KEY: $(IOTHUB-CA-ROOT-CERT-KEY)
 
-  # Pack npm archive
-  - task: PowerShell@2
-    displayName: 'Create NPM pack archive'
-    inputs:
-      targetType: inline
-      script: |
-        $package = npm pack
-        echo "##vso[task.setvariable variable=package]$package"
-      workingDirectory: $(Build.SourcesDirectory)
+    # Publish test results
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results | Mocha'
+      inputs:
+        testResultsFiles: 'e2etests/test-results.*.xml'
+        mergeTestResults: true
+        testRunTitle: 'E2E Tests - Windows'
+      condition: succeededOrFailed()
 
-  # copy packed npm archive to artifact staging / dist
-  - task: CopyFiles@2
-    displayName: 'Copy packed archive to artifact staging'
-    inputs:
-      contents: $(package)
-      targetFolder: $(Build.ArtifactStagingDirectory)
-      sourceFolder: $(Build.SourcesDirectory)
+- stage: Pack
+  dependsOn: ['SDL', 'Test']
+  jobs:
+  - job: pack
+    displayName: 'Package for Release'
+    pool:
+      name: $(buildPool)
+      vmImage: $(vmImage)
+      demands:
+        - ImageOverride -equals $(vmImage)
+    steps:
 
-  # run SBOM in artifact staging
-  - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-    displayName: 'Generate software manifest for executable'
-    inputs:
-      BuildDropPath: $(Build.ArtifactStagingDirectory)
+    # Pack npm archive
+    - task: PowerShell@2
+      displayName: 'Create NPM pack archive'
+      inputs:
+        targetType: inline
+        script: |
+          $package = npm pack
+          echo "##vso[task.setvariable variable=package]$package"
+        workingDirectory: $(Build.SourcesDirectory)
 
-  # publish artifacts to pipeline
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish build artifacts'
-    inputs:
-      pathToPublish: $(Build.ArtifactStagingDirectory)
-      artifactName: azure-iot-dps-node
+    # copy packed npm archive to artifact staging / dist
+    - task: CopyFiles@2
+      displayName: 'Copy packed archive to artifact staging'
+      inputs:
+        contents: $(package)
+        targetFolder: $(Build.ArtifactStagingDirectory)
+        sourceFolder: $(Build.SourcesDirectory)
+
+    # run SBOM in artifact staging
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'Generate software manifest for executable'
+      inputs:
+        BuildDropPath: $(Build.ArtifactStagingDirectory)
+
+    # publish artifacts to pipeline
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish build artifacts'
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)
+        artifactName: azure-iot-dps-node
 
   # - task: AzureFileCopy@2
   #   displayName: 'Copy Release Artifacts to Partner Release Pipeline'
