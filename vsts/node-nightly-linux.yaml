@@ -18,13 +18,9 @@ jobs:
 
 
   - script: |
-    npm run build
-    npm run ci
-    displayName: 'Unit & Integration Tests'
+      npm install
+      npm run build
+      npm run ci
+    displayName: 'Unit Tests'
     env:
       IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)
-
-  - script: |
-    cd e2e
-    npm install
-    ln -s

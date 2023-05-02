@@ -1,7 +1,11 @@
 coverage/
 devdoc/
+vsts/
 test/
+test_resources/
+e2e/
 samples/
 src/
-dist/**/*.map
+**/*.map
 .nyc_output
+tsconfig.json

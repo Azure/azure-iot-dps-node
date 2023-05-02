@@ -10,7 +10,7 @@ import { QuerySpecification, Query, QueryResult } from './query';
 // tslint:disable-next-line:no-unused-variable
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult, AttestationMechanism } from './interfaces';
 import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, ResultWithHttpResponse } from 'azure-iot-common';
-import { TokenCredential } from '@azure/core-http';
+import { TokenCredential } from '@azure/core-auth';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json');

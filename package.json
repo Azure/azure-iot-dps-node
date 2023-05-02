@@ -1,24 +1,25 @@
 {
   "name": "azure-iot-provisioning-service",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Azure IoT SDK - Provisioning Service Client",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "main": "iotprovisioningservice.js",
   "typings": "iotprovisioningservice.d.ts",
   "dependencies": {
+    "@azure/core-auth": "^1.4.0",
     "async": "^3.2.3",
     "azure-iot-common": "1.13.1",
-    "azure-iot-http-base": "^1.12.1",
-    "debug": "^4.3.1",
-    "@azure/core-http": "^1.2.3"
+    "azure-iot-http-base": "^1.12.2",
+    "debug": "^4.3.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",
     "@types/node": "^16.10.2",
-    "eslint": "^8.26.0",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
+    "chai": "^4.3.3",
+    "eslint": "^8.26.0",
     "eslint-plugin-jsdoc": "^39.3.25",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-no-null": "^1.0.2",
@@ -26,11 +27,11 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-security": "^1.5.0",
     "lerna": "^6.0.3",
-    "chai": "^4.3.3",
     "mocha": "^9.2.1",
     "nyc": "^15.0.0",
     "sinon": "^11.1.2",
     "source-map-support": "^0.5.16",
+    "ts-node": "^10.9.1",
     "typescript": "4.4.4"
   },
   "scripts": {
@@ -46,6 +47,11 @@
     "test": "npm -s run lint && npm -s run build && npm -s run alltest",
     "e2e": "./node_modules/mocha/bin/_mocha e2e/_*.js"
   },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "iotprovisioningservice.d.ts"
+  ],
   "nyc": {
     "exclude": [
       "coverage/**",
