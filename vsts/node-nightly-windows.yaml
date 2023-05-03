@@ -26,6 +26,8 @@ variables:
   value: $[variables.${{ parameters.buildAgentVmImageVar }}]
 - name: buildPool
   value: $[variables.${{ parameters.buildAgentPoolVar }}]
+- name: buildFolder
+  value: $[ format('{0:yyyy}-{0:MM}-{0:dd}', pipeline.startTime) ]
 
 stages:
 - stage: SDL
@@ -132,12 +134,21 @@ stages:
         pathToPublish: $(Build.ArtifactStagingDirectory)
         artifactName: azure-iot-dps-node
 
-  # - task: AzureFileCopy@2
-  #   displayName: 'Copy Release Artifacts to Partner Release Pipeline'
-  #   condition: ${{ parameters.release }}
-  #   inputs:
-  #     SourcePath: $(Build.ArtifactStagingDirectory)\_out
-  #     azureSubscription: azuresdkpartnerdrops
-  #     Destination: AzureBlob
-  #     storage: azuresdkpartnerdrops
-  #     ContainerName: 'drops/azure-iot-sdk/node/'
+    # copy packed npm archive dated folder for release archive
+    - task: CopyFiles@2
+      displayName: 'Copy packed archive to artifact staging'
+      inputs:
+        contents: $(package)
+        targetFolder: $(Build.ArtifactStagingDirectory)\out\$(buildFolder)
+        sourceFolder: $(Build.ArtifactStagingDirectory)
+
+    # copy to SDK partner release storage
+    - task: AzureFileCopy@2
+      displayName: 'Copy Release Artifacts to Partner Release Pipeline'
+      condition: ${{ parameters.release }}
+      inputs:
+        SourcePath: $(Build.ArtifactStagingDirectory)\out
+        azureSubscription: azuresdkpartnerdrops
+        Destination: AzureBlob
+        storage: azuresdkpartnerdrops
+        ContainerName: 'drops/azure-iot-sdk/node/'
