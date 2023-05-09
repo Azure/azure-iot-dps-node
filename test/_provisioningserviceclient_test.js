@@ -4,9 +4,9 @@
 "use strict";
 
 const assert = require('chai').assert;
-const errors = require('azure-iot-common').errors;
+const errors = require('../dist/common-core/errors');
 const ProvisioningServiceClient = require('../dist/provisioningserviceclient.js').ProvisioningServiceClient;
-const encodeURIComponentStrict = require('azure-iot-common').encodeUriComponentStrict;
+const encodeURIComponentStrict = require('../dist/common-core/authorization').encodeUriComponentStrict;
 
 const fakeRegistrationId = 'fakeId';
 const fakeDeviceId = 'sample-device';

@@ -4,7 +4,8 @@
 'use strict';
 
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState } from './interfaces';
-import { ResultWithHttpResponse, HttpResponseCallback, httpCallbackToPromise } from 'azure-iot-common';
+import { ResultWithHttpResponse } from './common-core/results';
+import { HttpResponseCallback, httpCallbackToPromise } from './common-core/promise_utils';
 
 /**
  * The query result.
