@@ -288,36 +288,4 @@ describe('Http', function () {
     });
   });
 
-  describe('#toMessage', function () {
-    /*Tests_SRS_NODE_HTTP_13_001: [ If the HTTP response has a header with the prefix iothub-app- then a new property with the header name and value as the key and value shall be added to the message. ]*/
-    it('adds HTTP headers with prefix iothub-app- as message properties', function () {
-      const mockResponse = {
-        statusCode: 200,
-        headers: {
-          'iothub-app-k1': 'v1',
-          'iothub-app-k2': 'v2',
-          'iothub-app-k3': 'v3'
-        }
-      };
-      const mockBody = 'boo';
-      const httpTransport = new Http();
-      const message = httpTransport.toMessage(mockResponse, mockBody);
-
-      assert.isOk(message);
-      assert.isOk(message.properties);
-      const count = message.properties.count();
-      assert.strictEqual(count, 3);
-
-      for(let i = 1; i <= count; ++i) {
-          const key = 'iothub-app-k' + i.toString();
-          const val = 'v' + i.toString();
-          const item = message.properties.getItem(i - 1);
-          assert.isOk(item);
-          assert.isOk(item.key);
-          assert.isOk(item.value);
-          assert.strictEqual(item.key, key);
-          assert.strictEqual(item.value, val);
-        }
-    });
-  });
 });

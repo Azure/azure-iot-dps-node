@@ -129,22 +129,6 @@ export class RestApiClient {
   }
 
   /**
-   * @method             module:azure-iothub.RestApiClient.updateSharedAccessSignature
-   * @description        Updates the shared access signature used to authenticate API calls.
-   *
-   * @param  {string}          sharedAccessSignature  The new shared access signature that should be used.
-   *
-   * @throws {ReferenceError}  If the new sharedAccessSignature is falsy.
-   */
-  updateSharedAccessSignature(sharedAccessSignature: string | SharedAccessSignature): void {
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-    if (!sharedAccessSignature) throw new ReferenceError('sharedAccessSignature cannot be \'' + sharedAccessSignature + '\'');
-
-    /*Codes_SRS_NODE_IOTHUB_REST_API_CLIENT_16_028: [The `updateSharedAccessSignature` method shall update the `sharedAccessSignature` configuration parameter that is used in the `Authorization` header of all HTTP requests.]*/
-    this._config.sharedAccessSignature = sharedAccessSignature;
-  }
-
-  /**
    * @private
    */
   setOptions(options: any): void {

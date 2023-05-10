@@ -6,8 +6,6 @@
 
 import * as authorization from './authorization';
 import { Callback } from './promise_utils';
-import { ArgumentError, FormatError } from './errors';
-import { createDictionary } from './dictionary';
 
 /**
  * Shared access signature tokens are used to authenticate the connection when using symmetric keys (as opposed to x509 certificates) to secure the connection with the Azure IoT hub.
@@ -155,45 +153,4 @@ static createWithSigningFunction(credentials: authorization.TransportConfig, exp
   });
 }
 
-/**
- * @method          module:azure-iot-common.SharedAccessSignature.parse
- * @description     Instantiate a SharedAccessSignature token from a string.
- *
- * @param {String}  source          the string to parse in order to create the SharedAccessSignature token.
- * @param {Array}   requiredFields  an array of fields that we expect to find in the source string.
- *
- * @throws {FormatError}            Will be thrown if the source string is malformed.
- *
- * @returns {SharedAccessSignature} A shared access signature token.
- */
-  static parse(source: string, requiredFields?: string[]): SharedAccessSignature {
-    /*Codes_SRS_NODE_COMMON_SAS_05_001: [The input argument source shall be converted to string if necessary.]*/
-    const parts = String(source).split(/\s/);
-    /*Codes_SRS_NODE_COMMON_SAS_05_005: [The parse method shall throw FormatError if the shared access signature string does not start with 'SharedAccessSignature<space>'.]*/
-    if (parts.length !== 2 || !parts[0].match(/SharedAccessSignature/)) {
-      throw new FormatError('Malformed signature');
-    }
-
-    const dict = createDictionary(parts[1], '&');
-    const err = 'The shared access signature is missing the property: ';
-
-    requiredFields = requiredFields || [];
-
-    /*Codes_SRS_NODE_COMMON_SAS_05_006: [The parse method shall throw ArgumentError if any of fields in the requiredFields argument are not found in the source argument.]*/
-    requiredFields.forEach((key: string): void => {
-      if (!(key in dict)) throw new ArgumentError(err + key);
-    });
-
-    /*Codes_SRS_NODE_COMMON_SAS_05_002: [The parse method shall create a new instance of SharedAccessSignature.]*/
-    const sas = new SharedAccessSignature();
-
-    /*Codes_SRS_NODE_COMMON_SAS_05_003: [It shall accept a string argument of the form 'name=value[&name=value…]' and for each name extracted it shall create a new property on the SharedAccessSignature object instance.]*/
-    /*Codes_SRS_NODE_COMMON_SAS_05_004: [The value of the property shall be the value extracted from the source argument for the corresponding name.]*/
-    Object.keys(dict).forEach((key: string): void => {
-      sas[key] = dict[key];
-    });
-
-    /*Codes_SRS_NODE_COMMON_SAS_05_007: [The generated SharedAccessSignature object shall be returned to the caller.]*/
-    return sas;
-  }
 }

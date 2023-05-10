@@ -652,38 +652,6 @@ describe('RestApiClient', function () {
     });
   });
 
-  describe('#updateSharedAccessSignature', function () {
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_034: [The `updateSharedAccessSignature` method shall throw a `ReferenceError` if the `sharedAccessSignature` argument is falsy.]*/
-    [undefined, null, ''].forEach(function (badSas) {
-      it('throws if \'sharedAccessSignature\' is \'' + badSas + '\'', function () {
-        const client = new RestApiClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeAgent);
-        assert.throws(function () {
-          client.updateSharedAccessSignature(badSas);
-        }, ReferenceError);
-      });
-    });
-
-    /*Tests_SRS_NODE_IOTHUB_REST_API_CLIENT_16_028: [The `updateSharedAccessSignature` method shall update the `sharedAccessSignature` configuration parameter that is used in the `Authorization` header of all HTTP requests.]*/
-    it('uses the updated sharedAccessSignature', function (done) {
-      const newSas = 'newSas';
-      const fakeHttpRequestBuilder = {
-        buildRequest: function (method, path, headers) {
-          assert.equal(headers.Authorization, newSas);
-          return {
-            write: function () {},
-            end: function () {
-              done();
-            }
-          };
-        }
-      };
-
-      const client = new RestApiClient({ host: 'host', sharedAccessSignature: 'sas' }, fakeAgent, fakeHttpRequestBuilder);
-      client.updateSharedAccessSignature(newSas);
-      client.executeApiCall('POST', '/fake/path', null, null, function () {});
-    });
-  });
-
   describe('translateError', function () {
     [
       /*Tests_SRS_NODE_IOTHUB_REGISTRY_HTTP_ERRORS_16_003: [`translateError` shall return an `ArgumentError` if the HTTP response status code is `400`.]*/

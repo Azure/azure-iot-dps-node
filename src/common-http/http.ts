@@ -5,7 +5,6 @@
 
 import { request as http_request, ClientRequest, IncomingMessage } from 'http';
 import { request as https_request, RequestOptions } from 'https';
-import { Message } from '../common-core/message';
 import { X509 } from '../common-core/authorization';
 import dbg = require('debug');
 const debug = dbg('azure-iot-http-base.Http');
@@ -174,50 +173,6 @@ export class Http {
     httpReq.on('error', done);
     /*Codes_SRS_NODE_HTTP_05_002: [buildRequest shall return a Node.js https.ClientRequest/http.ClientRequest object, upon which the caller must invoke the end method in order to actually send the request.]*/
     return httpReq;
-  }
-
-  /**
-   * @method                              module:azure-iot-http-base.Http.toMessage
-   * @description                         Transforms the body of an HTTP response into a {@link module:azure-iot-common.Message} that can be treated by the client.
-   *
-   * @param {module:http.IncomingMessage} response        A response as returned from the node.js http module
-   * @param {Object}                      body            The section of the URI that should be appended after the hostname.
-   *
-   * @returns {module:azure-iot-common.Message} A Message object.
-   */
-  toMessage(response: IncomingMessage, body: Message.BufferConvertible): Message {
-    let msg: Message;
-    /*Codes_SRS_NODE_HTTP_05_006: [If the status code of the HTTP response < 300, toMessage shall create a new azure-iot-common.Message object with data equal to the body of the HTTP response.]*/
-    if (response.statusCode < 300) {
-      msg = new Message(body);
-      for (const item in response.headers) {
-        if (item.search('iothub-') !== -1) {
-          if (item.toLowerCase() === 'iothub-messageid') {
-            /*Codes_SRS_NODE_HTTP_05_007: [If the HTTP response has an 'iothub-messageid' header, it shall be saved as the messageId property on the created Message.]*/
-            msg.messageId = response.headers[item] as any;
-          } else if (item.toLowerCase() === 'iothub-to') {
-            /*Codes_SRS_NODE_HTTP_05_008: [If the HTTP response has an 'iothub-to' header, it shall be saved as the to property on the created Message.]*/
-            msg.to = response.headers[item] as any;
-          } else if (item.toLowerCase() === 'iothub-expiry') {
-            /*Codes_SRS_NODE_HTTP_05_009: [If the HTTP response has an 'iothub-expiry' header, it shall be saved as the expiryTimeUtc property on the created Message.]*/
-            msg.expiryTimeUtc = response.headers[item] as any;
-          } else if (item.toLowerCase() === 'iothub-correlationid') {
-            /*Codes_SRS_NODE_HTTP_05_010: [If the HTTP response has an 'iothub-correlationid' header, it shall be saved as the correlationId property on the created Message.]*/
-            msg.correlationId = response.headers[item] as any;
-          } else if (item.search('iothub-app-') !== -1) {
-            /*Codes_SRS_NODE_HTTP_13_001: [ If the HTTP response has a header with the prefix iothub-app- then a new property with the header name and value as the key and value shall be added to the message. ]*/
-              msg.properties.add(item, response.headers[item] as string);
-          }
-        } else if (item.toLowerCase() === 'etag') {
-          /*Codes_SRS_NODE_HTTP_05_011: [If the HTTP response has an 'etag' header, it shall be saved as the lockToken property on the created Message, minus any surrounding quotes.]*/
-          // Need to strip the quotes from the string
-          const len = response.headers[item].length;
-          msg.lockToken = (response.headers[item] as string).substring(1, len - 1);
-        }
-      }
-    }
-
-    return msg;
   }
 
   /**
