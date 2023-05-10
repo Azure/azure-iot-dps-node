@@ -3,13 +3,17 @@
 
 'use strict';
 
-import { errors, SharedAccessSignature, ConnectionString, httpCallbackToPromise, encodeUriComponentStrict } from 'azure-iot-common';
-import { RestApiClient } from 'azure-iot-http-base';
+import * as errors from './common-core/errors';
+import { SharedAccessSignature } from './common-core/shared_access_signature';
+import { ConnectionString } from './common-core/connection_string';
+import { encodeUriComponentStrict } from './common-core/authorization';
+import { RestApiClient } from './common-http/rest_api_client';
 import { QuerySpecification, Query, QueryResult } from './query';
 // tslint seems to think AttestationMechanism isn't used on the next import statement so disabling this warning.
 // tslint:disable-next-line:no-unused-variable
 import { IndividualEnrollment, EnrollmentGroup, DeviceRegistrationState, BulkEnrollmentOperation, BulkEnrollmentOperationResult, AttestationMechanism } from './interfaces';
-import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, ResultWithHttpResponse } from 'azure-iot-common';
+import { ErrorCallback, errorCallbackToPromise, HttpResponseCallback, httpCallbackToPromise } from './common-core/promise_utils';
+import { ResultWithHttpResponse } from './common-core/results';
 import { TokenCredential } from '@azure/core-auth';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
