@@ -103,6 +103,26 @@ stages:
     displayName: 'Package for Release'
     steps:
 
+    # Run SBOM on source
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'Generate software manifest for executable'
+      inputs:
+        BuildDropPath: $(Build.SourcesDirectory)
+
+    # Publish SBOM manifest artifact
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish build artifacts'
+      inputs:
+        pathToPublish: $(Build.SourcesDirectory)\_manifest
+        artifactName: SBOM
+
+    # Install dependencies
+    - script: npm ci
+      displayName: 'Install dependencies (CI)'
+
+    - script: npm run build
+      displayName: 'Typescript compile'
+  
     # Pack npm archive
     - task: PowerShell@2
       displayName: 'Create NPM pack archive'
@@ -121,11 +141,6 @@ stages:
         targetFolder: $(Build.ArtifactStagingDirectory)
         sourceFolder: $(Build.SourcesDirectory)
 
-    # run SBOM in artifact staging
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: 'Generate software manifest for executable'
-      inputs:
-        BuildDropPath: $(Build.ArtifactStagingDirectory)
 
     # publish artifacts to pipeline
     - task: PublishBuildArtifacts@1
@@ -166,7 +181,7 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy packed archive to artifact staging'
       inputs:
-        contents: '**\*.tgz'
+        contents: '*.tgz'
         sourceFolder: $(Build.ArtifactStagingDirectory)\azure-iot-dps-node
         targetFolder: $(Build.ArtifactStagingDirectory)\release\$(buildFolder)
 
