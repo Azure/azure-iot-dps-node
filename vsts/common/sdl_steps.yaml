@@ -9,7 +9,7 @@ steps:
   displayName: 'Run PoliCheck'
   inputs:
     targetType: F
-- task: PostAnalysis@1
+- task: PostAnalysis@2
   displayName: "SDL Analysis"
   inputs:
     AllTools: false
