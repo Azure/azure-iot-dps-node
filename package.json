@@ -10,7 +10,7 @@
     "@azure/core-auth": "^1.4.0",
     "async": "^3.2.3",
     "azure-iot-common": "1.13.1",
-    "azure-iot-http-base": "^1.12.2",
+    "azure-iot-http-base": "1.12.2",
     "debug": "^4.3.1"
   },
   "devDependencies": {

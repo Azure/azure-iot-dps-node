@@ -5,11 +5,11 @@ steps:
   inputs:
     outputFormat: 'pre'
     scanFolder: $(Build.SourcesDirectory)
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@2
   displayName: 'Run PoliCheck'
   inputs:
     targetType: F
-- task: PostAnalysis@1
+- task: PostAnalysis@2
   displayName: "SDL Analysis"
   inputs:
     AllTools: false
